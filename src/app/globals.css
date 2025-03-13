@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 18, 18, 18;
+  --background-start-rgb: 10, 94, 88;
+  --background-end-rgb: 10, 94, 88;
+  --brand-orange: 245, 105, 32;
+  --brand-dark-green: 10, 94, 88;
+  --brand-light-green: 49, 180, 148;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+  font-family: 'Calibri', sans-serif;
+}
+
+/* Ensure select elements use Calibri */
+select, input, button, textarea {
+  font-family: 'Calibri', sans-serif;
+} 
