@@ -31,8 +31,8 @@ A modern web application for managing and displaying Power BI embeds on rotation
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/power-carousel.git
-cd power-carousel
+git clone https://github.com/xn1k/PowerCarousel.git
+cd PowerCarousel
 ```
 
 2. Install dependencies:
