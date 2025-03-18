@@ -11,13 +11,14 @@ A modern web application for managing and displaying Power BI embeds on rotation
 - **Customizable Rotation**: Set specific duration for each embed before rotating to the next
 - **Responsive Design**: Clean, modern UI that works on various screen sizes
 - **Custom Branding**: Styled with a professional color scheme
+- **Persistent Storage**: Configuration stored in JSON files that persists between sessions and server restarts
 
 ## Tech Stack
 
 - **Next.js 15**: React framework with App Router
 - **TypeScript**: For type safety and better developer experience
 - **Tailwind CSS**: For styling and responsive design
-- **LocalStorage**: For data persistence (can be replaced with a database for production)
+- **File-based Storage**: JSON file storage for configuration persistence
 
 ## Getting Started
 
@@ -41,13 +42,19 @@ cd PowerCarousel
 npm install
 ```
 
-3. Start the development server:
+3. Set up the data directory:
+
+```bash
+npm run setup
+```
+
+4. Start the development server:
 
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. Open [http://localhost:3000](http://localhost:3000) in your browser
 
 ### Default Login Credentials
 
@@ -74,6 +81,15 @@ npm run dev
 - Access any display by navigating to its endpoint: `/<endpoint>`
 - The display will automatically rotate through all configured embeds
 - The header shows the current position in the rotation sequence
+
+## Data Storage
+
+The application uses a simple file-based storage system for persistence:
+
+- All display and embed configuration is stored in `/data/displays.json`
+- The data directory is automatically created when you run the app
+- Data persists between server restarts and across different sessions
+- For backup purposes, configurations are also cached in localStorage
 
 ## Power BI Authentication
 
@@ -150,7 +166,7 @@ The application uses Calibri as the default font. This can be changed in the `ta
 For production use, consider:
 
 1. Implementing a more robust authentication system
-2. Using a database instead of localStorage for data persistence
+2. Using a database instead of simple JSON file storage
 3. Adding environment variables for sensitive information
 4. Implementing rate limiting and other security measures
 

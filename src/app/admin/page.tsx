@@ -4,25 +4,15 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
-
-interface Embed {
-  id: string;
-  url: string;
-  duration: number;
-}
-
-interface Display {
-  id: string;
-  name: string;
-  endpoint: string;
-  embeds: Embed[];
-}
+import { Display, Embed, fetchDisplays, saveDisplays } from '@/lib/displayService';
 
 export default function AdminPage() {
   const [displays, setDisplays] = useState<Display[]>([]);
   const [newDisplay, setNewDisplay] = useState({ name: '', endpoint: '' });
   const [newEmbed, setNewEmbed] = useState({ displayId: '', url: '', duration: 30 });
   const [selectedDisplay, setSelectedDisplay] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const router = useRouter();
   const { isAuthenticated, logout } = useAuth();
 
@@ -33,20 +23,39 @@ export default function AdminPage() {
     }
   }, [isAuthenticated, router]);
 
-  // Load displays from localStorage on component mount
+  // Load displays from API on component mount
   useEffect(() => {
-    const savedDisplays = localStorage.getItem('displays');
-    if (savedDisplays) {
-      setDisplays(JSON.parse(savedDisplays));
-    }
+    const loadDisplays = async () => {
+      try {
+        const data = await fetchDisplays();
+        setDisplays(data);
+      } catch (error) {
+        console.error('Failed to load displays:', error);
+      }
+    };
+    
+    loadDisplays();
   }, []);
 
-  // Save displays to localStorage whenever they change
-  useEffect(() => {
-    localStorage.setItem('displays', JSON.stringify(displays));
-  }, [displays]);
+  // Function to save displays
+  const handleSaveDisplays = async (updatedDisplays: Display[]) => {
+    setIsSaving(true);
+    setSaveError(null);
+    
+    try {
+      const success = await saveDisplays(updatedDisplays);
+      if (!success) {
+        setSaveError('Failed to save displays to server, but saved locally');
+      }
+    } catch (error) {
+      console.error('Error saving displays:', error);
+      setSaveError('Failed to save displays');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-  const handleAddDisplay = (e: React.FormEvent) => {
+  const handleAddDisplay = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newDisplay.name || !newDisplay.endpoint) return;
@@ -58,27 +67,29 @@ export default function AdminPage() {
       embeds: []
     };
     
-    setDisplays([...displays, display]);
+    const updatedDisplays = [...displays, display];
+    setDisplays(updatedDisplays);
     setNewDisplay({ name: '', endpoint: '' });
+    
+    await handleSaveDisplays(updatedDisplays);
   };
 
-  const handleAddEmbed = (e: React.FormEvent) => {
+  const handleAddEmbed = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newEmbed.displayId || !newEmbed.url || newEmbed.duration <= 0) return;
+    
+    const embed: Embed = {
+      id: Date.now().toString(),
+      url: newEmbed.url,
+      duration: newEmbed.duration
+    };
     
     const updatedDisplays = displays.map(display => {
       if (display.id === newEmbed.displayId) {
         return {
           ...display,
-          embeds: [
-            ...display.embeds,
-            {
-              id: Date.now().toString(),
-              url: newEmbed.url,
-              duration: newEmbed.duration
-            }
-          ]
+          embeds: [...display.embeds, embed]
         };
       }
       return display;
@@ -86,16 +97,22 @@ export default function AdminPage() {
     
     setDisplays(updatedDisplays);
     setNewEmbed({ ...newEmbed, url: '', duration: 30 });
+    
+    await handleSaveDisplays(updatedDisplays);
   };
 
-  const handleDeleteDisplay = (id: string) => {
-    setDisplays(displays.filter(display => display.id !== id));
+  const handleDeleteDisplay = async (id: string) => {
+    const updatedDisplays = displays.filter(display => display.id !== id);
+    setDisplays(updatedDisplays);
+    
     if (selectedDisplay === id) {
       setSelectedDisplay(null);
     }
+    
+    await handleSaveDisplays(updatedDisplays);
   };
 
-  const handleDeleteEmbed = (displayId: string, embedId: string) => {
+  const handleDeleteEmbed = async (displayId: string, embedId: string) => {
     const updatedDisplays = displays.map(display => {
       if (display.id === displayId) {
         return {
@@ -107,6 +124,7 @@ export default function AdminPage() {
     });
     
     setDisplays(updatedDisplays);
+    await handleSaveDisplays(updatedDisplays);
   };
 
   if (!isAuthenticated) {
@@ -125,6 +143,18 @@ export default function AdminPage() {
             Logout
           </button>
         </div>
+        
+        {saveError && (
+          <div className="mb-6 bg-red-500 bg-opacity-20 border border-red-500 rounded-md p-3 text-white">
+            <p>{saveError}</p>
+          </div>
+        )}
+        
+        {isSaving && (
+          <div className="mb-6 bg-brand-light-green bg-opacity-20 border border-brand-light-green rounded-md p-3 text-white">
+            <p>Saving changes...</p>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Add Display Form */}

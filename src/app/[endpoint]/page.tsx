@@ -3,19 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-
-interface Embed {
-  id: string;
-  url: string;
-  duration: number;
-}
-
-interface Display {
-  id: string;
-  name: string;
-  endpoint: string;
-  embeds: Embed[];
-}
+import { fetchDisplays } from '@/lib/displayService';
+import type { Display } from '@/lib/displayService';
 
 export default function DisplayPage() {
   const params = useParams();
@@ -27,23 +16,27 @@ export default function DisplayPage() {
   const [error, setError] = useState<string | null>(null);
   const [authError, setAuthError] = useState(false);
 
-  // Load display data from localStorage
+  // Load display data from API
   useEffect(() => {
-    const savedDisplays = localStorage.getItem('displays');
-    if (savedDisplays) {
-      const displays: Display[] = JSON.parse(savedDisplays);
-      const matchedDisplay = displays.find(d => d.endpoint === endpoint);
-      
-      if (matchedDisplay) {
-        setDisplay(matchedDisplay);
-      } else {
-        setError(`No display found with endpoint: ${endpoint}`);
+    const loadDisplay = async () => {
+      try {
+        const displays = await fetchDisplays();
+        const matchedDisplay = displays.find(d => d.endpoint === endpoint);
+        
+        if (matchedDisplay) {
+          setDisplay(matchedDisplay);
+        } else {
+          setError(`No display found with endpoint: ${endpoint}`);
+        }
+      } catch (error) {
+        console.error('Failed to load display:', error);
+        setError('Failed to load display data');
+      } finally {
+        setLoading(false);
       }
-    } else {
-      setError('No displays configured');
-    }
+    };
     
-    setLoading(false);
+    loadDisplay();
   }, [endpoint]);
 
   // Rotate through embeds
