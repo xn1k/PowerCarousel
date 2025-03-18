@@ -1,6 +1,7 @@
 // Define display and embed types
 export interface Embed {
   id: string;
+  name: string;
   url: string;
   duration: number;
 }

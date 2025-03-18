@@ -15,6 +15,7 @@ export default function DisplayPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authError, setAuthError] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Load display data from API
   useEffect(() => {
@@ -41,7 +42,7 @@ export default function DisplayPage() {
 
   // Rotate through embeds
   useEffect(() => {
-    if (!display || display.embeds.length === 0) return;
+    if (!display || display.embeds.length === 0 || isPaused) return;
     
     const currentEmbed = display.embeds[currentEmbedIndex];
     const timer = setTimeout(() => {
@@ -51,11 +52,30 @@ export default function DisplayPage() {
     }, currentEmbed.duration * 1000);
     
     return () => clearTimeout(timer);
-  }, [display, currentEmbedIndex]);
+  }, [display, currentEmbedIndex, isPaused]);
 
   // Function to open report in a new window
   const openInNewWindow = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  // Function to navigate to previous embed
+  const goToPrevious = () => {
+    setCurrentEmbedIndex((prevIndex) => 
+      prevIndex === 0 ? display!.embeds.length - 1 : prevIndex - 1
+    );
+  };
+
+  // Function to navigate to next embed
+  const goToNext = () => {
+    setCurrentEmbedIndex((prevIndex) => 
+      prevIndex === display!.embeds.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  // Function to toggle pause/play
+  const togglePause = () => {
+    setIsPaused(!isPaused);
   };
 
   if (loading) {
@@ -108,19 +128,49 @@ export default function DisplayPage() {
 
   return (
     <div className="h-screen flex flex-col">
-      <div className="bg-brand-dark-green text-white p-4 flex justify-between items-center">
-        <h1 className="text-xl font-bold">{display.name}</h1>
-        <div className="flex items-center space-x-4">
-          <div className="text-sm">
-            Showing {currentEmbedIndex + 1} of {display.embeds.length}
+      <div className="bg-brand-dark-green text-white p-4 flex flex-col sm:flex-row justify-between">
+        <div className="flex items-center mb-2 sm:mb-0">
+          <h1 className="text-xl font-bold">{display.name}</h1>
+          {currentEmbed.name && (
+            <span className="ml-2 text-sm opacity-75">• {currentEmbed.name}</span>
+          )}
+        </div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={goToPrevious}
+              className="px-3 py-1 bg-brand-light-green text-white rounded-md hover:bg-opacity-90 transition-colors"
+              title="Previous dashboard"
+            >
+              &lt; Prev
+            </button>
+            <button
+              onClick={togglePause}
+              className={`px-3 py-1 ${isPaused ? 'bg-brand-orange' : 'bg-brand-light-green'} text-white rounded-md hover:bg-opacity-90 transition-colors`}
+              title={isPaused ? "Resume rotation" : "Pause rotation"}
+            >
+              {isPaused ? '▶ Play' : '❚❚ Pause'}
+            </button>
+            <button
+              onClick={goToNext}
+              className="px-3 py-1 bg-brand-light-green text-white rounded-md hover:bg-opacity-90 transition-colors"
+              title="Next dashboard"
+            >
+              Next &gt;
+            </button>
           </div>
-          <button
-            onClick={() => openInNewWindow(currentEmbed.url)}
-            className="text-xs bg-brand-orange px-2 py-1 rounded hover:bg-opacity-90"
-            title="Open in new window (if you have authentication issues)"
-          >
-            Open in New Window
-          </button>
+          <div className="flex items-center space-x-2">
+            <div className="text-sm">
+              {currentEmbedIndex + 1} of {display.embeds.length}
+            </div>
+            <button
+              onClick={() => openInNewWindow(currentEmbed.url)}
+              className="text-xs bg-brand-orange px-2 py-1 rounded hover:bg-opacity-90"
+              title="Open in new window (if you have authentication issues)"
+            >
+              Open in New Window
+            </button>
+          </div>
         </div>
       </div>
       

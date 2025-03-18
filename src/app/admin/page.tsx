@@ -9,7 +9,7 @@ import { Display, Embed, fetchDisplays, saveDisplays } from '@/lib/displayServic
 export default function AdminPage() {
   const [displays, setDisplays] = useState<Display[]>([]);
   const [newDisplay, setNewDisplay] = useState({ name: '', endpoint: '' });
-  const [newEmbed, setNewEmbed] = useState({ displayId: '', url: '', duration: 30 });
+  const [newEmbed, setNewEmbed] = useState({ displayId: '', name: '', url: '', duration: 30 });
   const [selectedDisplay, setSelectedDisplay] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -77,10 +77,11 @@ export default function AdminPage() {
   const handleAddEmbed = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!newEmbed.displayId || !newEmbed.url || newEmbed.duration <= 0) return;
+    if (!newEmbed.displayId || !newEmbed.name || !newEmbed.url || newEmbed.duration <= 0) return;
     
     const embed: Embed = {
       id: Date.now().toString(),
+      name: newEmbed.name,
       url: newEmbed.url,
       duration: newEmbed.duration
     };
@@ -96,7 +97,7 @@ export default function AdminPage() {
     });
     
     setDisplays(updatedDisplays);
-    setNewEmbed({ ...newEmbed, url: '', duration: 30 });
+    setNewEmbed({ ...newEmbed, name: '', url: '', duration: 30 });
     
     await handleSaveDisplays(updatedDisplays);
   };
@@ -225,6 +226,21 @@ export default function AdminPage() {
               </div>
               
               <div>
+                <label htmlFor="embedName" className="block text-sm font-medium">
+                  Embed Name
+                </label>
+                <input
+                  type="text"
+                  id="embedName"
+                  value={newEmbed.name}
+                  onChange={(e) => setNewEmbed({ ...newEmbed, name: e.target.value })}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-light-green focus:border-brand-light-green"
+                  placeholder="e.g. Main Hall Embed"
+                  required
+                />
+              </div>
+              
+              <div>
                 <label htmlFor="embedUrl" className="block text-sm font-medium">
                   Power BI Embed URL
                 </label>
@@ -312,6 +328,7 @@ export default function AdminPage() {
                           {display.embeds.map(embed => (
                             <li key={embed.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
                               <div className="overflow-hidden">
+                                <p className="text-sm font-medium text-brand-dark-green">{embed.name}</p>
                                 <p className="text-sm truncate" title={embed.url}>
                                   {embed.url}
                                 </p>
