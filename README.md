@@ -75,6 +75,43 @@ npm run dev
 - The display will automatically rotate through all configured embeds
 - The header shows the current position in the rotation sequence
 
+## Power BI Authentication
+
+When embedding Power BI reports, you might encounter authentication issues. Here are some solutions:
+
+### Simple Embed (Current Implementation)
+
+The current implementation uses direct iframe embedding, which works well when:
+- Users are already logged into Power BI in the same browser
+- Reports are set to public or have appropriate permissions
+
+For authentication issues, the application provides an "Open in New Window" button which can help complete the authentication flow.
+
+### Advanced Embedding Options
+
+For production environments, consider these more robust solutions:
+
+1. **Power BI Embed Tokens**: The most secure way to embed reports
+   - Requires a backend service to generate embed tokens
+   - Uses the Power BI REST API
+   - Documentation: [Power BI Embedding](https://docs.microsoft.com/en-us/power-bi/developer/embedded/embed-sample-for-your-organization)
+
+2. **Power BI Embedded Capacity**: For scenarios where viewers don't have Power BI licenses
+   - Requires Azure subscription and Power BI Embedded capacity
+   - Provides embedding for non-Power BI users
+   - Documentation: [Power BI Embedded](https://docs.microsoft.com/en-us/power-bi/developer/embedded/embedding)
+
+3. **Microsoft Teams Integration**: If your organization uses Teams
+   - Consider embedding reports in Teams tabs instead
+   - Users will already be authenticated
+
+### Best Practices
+
+- Always sign in to Power BI before accessing embedded reports
+- Use the same browser for authentication and viewing
+- Clear browser cache if experiencing persistent issues
+- Consider implementing a server-side authentication flow for production
+
 ## Deployment
 
 ### Building for Production

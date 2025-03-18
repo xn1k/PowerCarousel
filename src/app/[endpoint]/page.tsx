@@ -25,6 +25,7 @@ export default function DisplayPage() {
   const [currentEmbedIndex, setCurrentEmbedIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState(false);
 
   // Load display data from localStorage
   useEffect(() => {
@@ -58,6 +59,11 @@ export default function DisplayPage() {
     
     return () => clearTimeout(timer);
   }, [display, currentEmbedIndex]);
+
+  // Function to open report in a new window
+  const openInNewWindow = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   if (loading) {
     return (
@@ -111,18 +117,53 @@ export default function DisplayPage() {
     <div className="h-screen flex flex-col">
       <div className="bg-brand-dark-green text-white p-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">{display.name}</h1>
-        <div className="text-sm">
-          Showing {currentEmbedIndex + 1} of {display.embeds.length}
+        <div className="flex items-center space-x-4">
+          <div className="text-sm">
+            Showing {currentEmbedIndex + 1} of {display.embeds.length}
+          </div>
+          <button
+            onClick={() => openInNewWindow(currentEmbed.url)}
+            className="text-xs bg-brand-orange px-2 py-1 rounded hover:bg-opacity-90"
+            title="Open in new window (if you have authentication issues)"
+          >
+            Open in New Window
+          </button>
         </div>
       </div>
       
-      <div className="flex-1 h-full">
+      <div className="flex-1 h-full relative">
         <iframe
           src={currentEmbed.url}
           className="w-full h-full border-0"
           style={{ height: 'calc(100vh - 64px)' }}
           allowFullScreen
+          onError={() => setAuthError(true)}
         />
+        
+        {authError && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-lg max-w-md text-center">
+              <h2 className="text-xl font-bold text-brand-dark-green mb-3">Authentication Required</h2>
+              <p className="text-brand-text mb-4">
+                There seems to be an authentication issue with this Power BI report. This commonly happens when embedding reports.
+              </p>
+              <div className="space-y-3">
+                <p className="text-sm text-gray-600">Try these solutions:</p>
+                <ol className="text-left text-sm list-decimal pl-5 space-y-2">
+                  <li>Make sure you're signed in to Power BI in this browser</li>
+                  <li>Try opening the report in a new window</li>
+                  <li>Contact your administrator for proper embed tokens</li>
+                </ol>
+                <button
+                  onClick={() => openInNewWindow(currentEmbed.url)}
+                  className="w-full mt-4 bg-brand-orange text-white py-2 px-4 rounded hover:bg-opacity-90"
+                >
+                  Open Report in New Window
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
